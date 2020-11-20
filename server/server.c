@@ -23,17 +23,25 @@ static void _register_cmd_cb(void)
     int fd = -1;
     printf("注册命令\n");
 
-    int ret = insert_user_tbl_for_register(fd, ptl.name, ptl.msg);
-    // printf("ret = %d\n", ret);
-    if (ret != 0)
+    if (!check_is_username_exist(ptl.name))   //该用户已经存在，不能注册
     {
-        ptl.cmd_reply = REPLY_REGSITER_FAILD;
-        printf("注册失败\n");
+        int ret = insert_usertbl_all_field(fd, ptl.name, ptl.msg);
+        // printf("ret = %d\n", ret);
+        if (!ret)  
+        {
+            ptl.cmd_reply = REPLY_REGSITER_FAILD;
+            printf("注册失败\n");
+        }
+        else
+        {
+            ptl.cmd_reply = REPLY_REGSITER_SUCCESS;
+            printf("注册成功\n");
+        }
     }
     else
     {
-        ptl.cmd_reply = REPLY_REGSITER_SUCCESS;
-        printf("注册成功\n");
+        ptl.cmd_reply = REPLY_REGSITER_FAILD;
+        printf("注册失败\n");
     }
 
     send(socket_fd, &ptl, sizeof(struct Protocol), 0); 

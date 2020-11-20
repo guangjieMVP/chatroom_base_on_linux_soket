@@ -15,15 +15,43 @@
 #define DATBASE_PATH    "chatroom.db"     //聊天室数据库
 #define TABLE_NAME      "user"            //数据表名
 
+#define RETURN_VAL(val)  (val != SQLITE_OK ? 0 : 1)
+
+#define USE_SQL_LOG       1
+
 static sqlite3 *db;
 
 static int creat_user_tbl(void);
 
+
+#if USE_SQL_LOG
+static void print_sql_op_ret_log(const int ret, const char *op, const char *err)
+{
+    if (ret != SQLITE_OK)
+    {
+        fprintf(stderr, "%s SQL error: %s\n", sqlite3_errmsg(db), err); 
+    }
+    else
+    {
+        fprintf(stdout, "%s successfully\n", op);
+    }
+}
+#endif
+
+/*
+  * @brief:             
+  * @param[in]:     None
+  * @retval[out]:   1 - 初始化成功
+  * @note:              
+  * @author:        guangjieMVP
+  * @github:        https://github.com/guangjieMVP
+*/
 int database_init(void)
 {
     int ret;
 
     ret = sqlite3_open(DATBASE_PATH, &db); //打开数据库，不存在则创建
+#
     if (ret)
     {
         fprintf(stderr, "Can't open database: %s\n", sqlite3_errmsg(db));
@@ -36,6 +64,9 @@ int database_init(void)
     
     return ret;
 }
+
+
+
 
 /*
   * @brief:         创建表    
@@ -54,15 +85,10 @@ static int creat_user_tbl(void)
     sprintf(sql, "create table if not exists %s(fd integetr, name char, password char);", TABLE_NAME);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-    if (ret != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-    }
-    else
-    {
-        fprintf(stdout, "Table created successfully\n");
-    }
-    return ret;
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "Table created", "create user tbl");
+#endif 
+    return RETURN_VAL(ret);
 }
 
 
@@ -93,7 +119,9 @@ int check_is_username_exist(const char *username)
     sprintf(sql, "select * from %s where name =\"%s\";", TABLE_NAME, username);
 
     ret = sqlite3_exec(db, sql, usernamecallback, 0, NULL);
-
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "select username", "check username");
+#endif
     return user_is_exist; 
 }
 
@@ -120,15 +148,9 @@ int check_username_and_password_exist(char *name, char *password)
     sprintf(sql, "select * from %s where name = \"%s\" and password=\"%s\";", TABLE_NAME, name, password);
 
     ret = sqlite3_exec(db, sql, usercallback, 0, NULL);
-    if (ret != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-    }
-    else
-    {
-        fprintf(stdout, "select successfully\n");
-    }
-
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "check usename and password", "check usename and password");
+#endif
     return user_is_right;
 }
 
@@ -141,7 +163,10 @@ int set_user_fd_field_by_name(int fd, char *username)
     sprintf(sql, "update %s set fd=%d where name=\"%s\";", TABLE_NAME, fd, username);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-    return (ret != SQLITE_OK ? 0 : 1);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "upate set fd", "upate set fd");
+#endif
+    return RETURN_VAL(ret);
 }
 
 
@@ -153,8 +178,10 @@ int set_user_password_field_by_name(char *password, char *username)
     sprintf(sql, "update %s set password=\"%s\" where name=\"%s\";", TABLE_NAME, password, username);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-
-    return (ret != SQLITE_OK ? 0 : 1);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "upate set password", "upate set password");
+#endif
+    return RETURN_VAL(ret);
 }
 
 int set_name_field_by_fd(char *username, int fd)
@@ -165,8 +192,10 @@ int set_name_field_by_fd(char *username, int fd)
     sprintf(sql, "update %s set name=\"%s\" where fd=%d;", TABLE_NAME, username, fd);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-
-    return (ret != SQLITE_OK ? 0 : 1);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "set name by fd", "set name by fd");
+#endif
+    return RETURN_VAL(ret);
 }
 
 int set_password_field_by_fd(char *password, int fd)
@@ -177,8 +206,10 @@ int set_password_field_by_fd(char *password, int fd)
     sprintf(sql, "update %s set password=\"%s\" where fd=%d;", TABLE_NAME, password, fd);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-
-    return (ret != SQLITE_OK ? 0 : 1);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "set password by fd", "set password by fd");
+#endif
+    return RETURN_VAL(ret);
 }
 
 int show_online_user(void)
@@ -189,15 +220,10 @@ int show_online_user(void)
     sprintf(sql, "select * from %s", TABLE_NAME);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-    if (ret != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-    }
-    else
-    {
-        fprintf(stdout, "select successfully\n");
-    }
-    return ret;
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "show online user", "show online user");
+#endif
+    return RETURN_VAL(ret);
 }
 
 
@@ -213,7 +239,7 @@ static int callback(void *NotUsed, int column_Count, char **column_Val, char **c
     return 0;
 } 
 
-int show_all_user(void)
+int show_all_users(void)
 {
     int ret;
 
@@ -221,16 +247,13 @@ int show_all_user(void)
     sprintf(sql, "select * from %s", TABLE_NAME);
 
     ret = sqlite3_exec(db, sql, callback, 0, NULL);
-    if (ret != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-    }
-    else
-    {
-        fprintf(stdout, "select successfully\n");
-    }
-    return ret;
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "show all users", "show all users");
+#endif
+    return RETURN_VAL(ret);
 }
+
+
 
 /*
   * @brief:         向用户表中插入字段    
@@ -240,52 +263,47 @@ int show_all_user(void)
   * @author:        guangjieMVP
   * @github:        https://github.com/guangjieMVP
 */
-int insert_user_tbl_for_register(const int fd, const char *username, const char *password)
+int insert_usertbl_all_field(const int fd, const char *username, const char *password)
 {
     int ret;
     char **err_msg;
 
     char sql[512] = {0};
 
-    ret = check_is_username_exist(username);
-//    printf("check username %d\n", ret);
-    if (ret) 
-        return -1;    
-
     sprintf(sql, "insert into %s values(%d, \"%s\", \"%s\");", TABLE_NAME, fd, username, password);
           //执行sql语句
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-    if (ret != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-    }
-    else
-    {
-        fprintf(stdout, "insert successfully\n");
-    }
-    return ret;
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "insert usertbl all", "insert usertbl all");
+#endif
+    return RETURN_VAL(ret);
 }
 
+/*
+  * @brief:             
+  * @param[in]:     None
+  * @retval[out]:   None
+  * @note:              
+  * @author:        guangjieMVP
+  * @github:        https://github.com/guangjieMVP
+*/
 int delete_tbl(char *tblname)
 {
     int ret;
+    char *op = "delete";
 
     char sql[512] = {0};
     sprintf(sql, "delete from %s", tblname);
 
     ret = sqlite3_exec(db, sql, NULL, 0, NULL);
-    if (ret != SQLITE_OK)
-    {
-        fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));
-    }
-    else
-    {
-        fprintf(stdout, "delete table successfully\n");
-    }
-    return ret;
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "delete table", "delete table");
+#endif
+
+    return RETURN_VAL(ret);
 }
 
-#define TEST_DEBUG  1
+#define TEST_DEBUG  0
 
 #if TEST_DEBUG   
 
@@ -293,10 +311,34 @@ int main(void)
 {
     database_init();
 
-    insert_user_tbl_for_register(-1, "ares", "12345");
-    insert_user_tbl_for_register(-1, "sola", "3455");
-    insert_user_tbl_for_register(-1, "yuying", "1265"); 
+    if (!check_is_username_exist("ares")) 
+    {
+        insert_usertbl_all_field(-1, "ares", "12345");
+    }
+    else
+    {
+        printf("ares already exists\n");
+    }
+    
 
+    if (!check_is_username_exist("sola")) 
+    {
+        insert_usertbl_all_field(-1, "sola", "3455"); 
+    }
+    else
+    {
+        printf("sola already exists\n");
+    }
+    
+    if (!check_is_username_exist("yuying")) 
+    {
+        insert_usertbl_all_field(-1, "yuying", "1265");  
+    }
+    else
+    {
+        printf("yuying already exists\n");
+    }
+    
 //    check_is_username_exist("ares");
     int ret = check_username_and_password_exist("ares", "12345");  //用户存在
     printf("ret = %d\n", ret);
@@ -316,7 +358,7 @@ int main(void)
     ret = set_password_field_by_fd("11054748293", 520);
     printf("set_name_field : %d\n", ret);
 
-    ret = show_all_user();
+    ret = show_all_users();
 
     delete_tbl(TABLE_NAME);
 //     

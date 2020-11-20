@@ -16,12 +16,12 @@ enum {
 
 void regsiter_success_cb(void)
 {
-    printf("注册成功\n");
+    printf("恭喜您!!!注册成功\n");
 }
 
 void regsiter_failed_cb(void)
 {
-    printf("注册失败\n");
+    printf("该用户已存在!!!注册失败\n");
 }
 
 void login_success_cb(void)
@@ -33,7 +33,6 @@ void login_failed_cb(void)
 {
     printf("登录失败\n");
 }
-
 
 static struct cmd cmd_reply_list[] = {
     {.cmd = REPLY_REGSITER_SUCCESS, .cmd_callback = regsiter_success_cb},
