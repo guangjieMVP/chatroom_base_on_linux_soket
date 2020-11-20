@@ -83,7 +83,7 @@ static int usernamecallback(void *NotUsed, int column_Count, char **column_Val, 
   * @author:        guangjieMVP
   * @github:        https://github.com/guangjieMVP
 */
-int check_is_username_exist(char *username)
+int check_is_username_exist(const char *username)
 {
     int ret;
 
@@ -188,7 +188,7 @@ int show_online_user(void)
     char sql[512] = {0};
     sprintf(sql, "select * from %s", TABLE_NAME);
 
-    ret = sqlite3_exec(db, sql, callback, 0, NULL);
+    ret = sqlite3_exec(db, sql, NULL, 0, NULL);
     if (ret != SQLITE_OK)
     {
         fprintf(stderr, "SQL error: %s\n", sqlite3_errmsg(db));

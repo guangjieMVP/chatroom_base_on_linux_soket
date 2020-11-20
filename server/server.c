@@ -5,7 +5,7 @@
 #define BACKLOG      10
 
 
-static  struct protocol ptl = {0};
+static  struct Protocol ptl = {0};
 static  int    socket_fd;
 
 static void _broadcast_chat_cmd_cb(void)
@@ -36,13 +36,13 @@ static void _register_cmd_cb(void)
         printf("注册成功\n");
     }
 
-    send(socket_fd, &ptl, sizeof(struct protocol), 0); 
+    send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
 static void _login_cmd_cb(void)
 {
     printf("登录命令\n");
-    if (check_is_user_exist(ptl.name, ptl.msg))   //数据库中存在该用户
+    if (check_username_and_password_exist(ptl.name, ptl.msg))   //数据库中存在该用户
     {                                           
                                                   //登录
         ptl.cmd_reply = REPLY_LOGIN_SUCCESS;                                         
@@ -51,7 +51,7 @@ static void _login_cmd_cb(void)
     {
         ptl.cmd_reply = REPLY_LOGIN_FAILD;
     }
-    send(socket_fd, &ptl, sizeof(struct protocol), 0); 
+    send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
 static void _logout_cmd_cb(void)
@@ -77,14 +77,14 @@ static int thread_exit_val;
 
 void *thread_recv(void *para)
 {
-    // int recv_len;
+    int recv_len;
     // uint8_t recv_buf[1000];
     socket_fd = *((int *)para);
     free(para);
     
     while (1) 
     {
-        if ((recv_len = recv(socket_fd, &ptl, sizeof(struct protocol), 0)) == -1)
+        if ((recv_len = recv(socket_fd, &ptl, sizeof(struct Protocol), 0)) == -1)
         {
             perror("recv");
             exit(1);

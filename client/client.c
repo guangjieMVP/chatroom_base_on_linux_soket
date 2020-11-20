@@ -75,8 +75,8 @@ int op_exit(void)
 
 int op_register(void)
 {
-    struct protocol ptl;
-    struct protocol reply_ptl;
+    struct Protocol ptl;
+    struct Protocol reply_ptl;
 
     printf("请输入用户名：\n");
     scanf("%s", ptl.name);
@@ -87,7 +87,7 @@ int op_register(void)
     ptl.cmd_reply = REPLY_NONE;
 
     extern int sock_client; 
-    int len = send(sock_client, &ptl, sizeof(struct protocol), 0);    //给服务端发送注册信息
+    int len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //给服务端发送注册信息
     printf("注册\n");
 
     // recv(sock_client, &reply_ptl, sizeof(struct protocol), 0);
@@ -109,8 +109,8 @@ int input_menu_option(void);
 
 int op_login(void)
 {
-    struct protocol ptl;
-    struct protocol reply_ptl;
+    struct Protocol ptl;
+    struct Protocol reply_ptl;
 
     printf("请输入用户名：\n");
     scanf("%s", ptl.name);
@@ -121,7 +121,7 @@ int op_login(void)
     ptl.cmd_reply = REPLY_NONE;
 
     extern int sock_client; 
-    int len = send(sock_client, &ptl, sizeof(struct protocol), 0);    //给服务端发送注册信息
+    int len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //给服务端发送注册信息
     printf("登录\n");
 
                                //等待成功登录的信号量
@@ -201,7 +201,7 @@ int global_socket;
 
 void *thread_recv(void *para)
 {
-    struct protocol reply_ptl;
+    struct Protocol reply_ptl;
     int recv_len;
     int socket = *(int *)para;
     uint8_t recv_buf[1000];
@@ -210,7 +210,7 @@ void *thread_recv(void *para)
 
     while (1) 
     {
-        recv_len = recv(socket, &reply_ptl, sizeof(struct protocol), 0);
+        recv_len = recv(socket, &reply_ptl, sizeof(struct Protocol), 0);
         if (recv_len <= 0)
         {
             close(socket);
