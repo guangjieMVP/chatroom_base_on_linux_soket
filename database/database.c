@@ -227,7 +227,7 @@ int show_online_user(void)
 }
 
 
-static int callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
+static int _callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
 {
     int i;
 //    printf("argc %d\r\n", column_Count);
@@ -239,7 +239,8 @@ static int callback(void *NotUsed, int column_Count, char **column_Val, char **c
     return 0;
 } 
 
-int show_all_users(void)
+
+int show_all_users(sqlite3_callback callback)
 {
     int ret;
 
@@ -358,7 +359,7 @@ int main(void)
     ret = set_password_field_by_fd("11054748293", 520);
     printf("set_name_field : %d\n", ret);
 
-    ret = show_all_users();
+    ret = show_all_users(_callback);
 
     delete_tbl(TABLE_NAME);
 //     

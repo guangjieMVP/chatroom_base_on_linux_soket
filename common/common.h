@@ -47,6 +47,7 @@ enum CmdCode {
     REGISTER_CMD           = 0x100502,
     LOGIN_CMD              = 0x100503,
     LOGOUT_CMD             = 0x100504,
+    LIST_ALL_USER_CMD      = 0x120405,
     LIST_ONLINE_USER_CMD   = 0x120406,
 };
 
@@ -62,8 +63,10 @@ enum CmdReply {
     REPLY_LOGOUT_SUCCESS    = 0xA55A05,        //注销失败
     REPLY_LOGOUT_FAILD      = 0xA55A06,        //注销成功
  
-    REPLY_PRIVATE_SUCCESS    = 0xA55A07,      //私聊成功
-    REPLY_PRIVATE_FAILD      = 0xA55A08,
+    REPLY_PRIVATE_SUCCESS   = 0xA55A07,      //私聊成功
+    REPLY_PRIVATE_FAILD     = 0xA55A08,
+    
+    REPLY_ALL_USER_SUCCESS   = 0xA55A09,
 };
 
 /* C/S 通信协议 */

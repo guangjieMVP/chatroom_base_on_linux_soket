@@ -15,5 +15,7 @@ int set_user_password_field_by_name(char *password, char *username);
 int set_name_field_by_fd(char *username, int fd);
 int set_password_field_by_fd(char *password, int fd);
 
+int show_all_users(sqlite3_callback callback);
+
 
 #endif

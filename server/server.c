@@ -88,7 +88,35 @@ static void _logout_cmd_cb(void)
 
 static void _listonline_user_cmd_cb(void)
 {
-    printf("列出在线用户命令\n");
+    printf("列出在线用户\n");
+}
+
+// static volatile int user_cout = 0;
+static int _list_all_user_callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
+{
+    int i;
+    // char usernum[10];
+    struct Protocol reply_ptl;
+
+    // user_cout++;
+    reply_ptl.cmd = LIST_ALL_USER_CMD;
+    reply_ptl.cmd_reply = REPLY_ALL_USER_SUCCESS;
+    // for (i = 0; i < (column_Count); i++)
+    // {
+    strcpy(reply_ptl.name, column_Val[1] ? column_Val[1] : "NULL");
+    send(socket_fd, &reply_ptl, sizeof(struct Protocol), 0);
+//        printf("  %s : %s  ", column_name[i], column_Val[i] ? column_Val[i] : "NULL");
+    // }
+    // printf("\n");
+    return 0;
+} 
+
+static void _list_all_user_cmd_cb(void)
+{
+    int ret;
+    ret = show_all_users(_list_all_user_callback);
+
+    printf("列出所有用户\n");
 }
 
 struct cmd cmdlist[] = {
@@ -98,6 +126,7 @@ struct cmd cmdlist[] = {
     {.cmd = LOGIN_CMD,              .cmd_callback = _login_cmd_cb},
     {.cmd = LOGOUT_CMD,             .cmd_callback = _logout_cmd_cb},
     {.cmd = LIST_ONLINE_USER_CMD,   .cmd_callback = _listonline_user_cmd_cb}, 
+    {.cmd = LIST_ALL_USER_CMD,      .cmd_callback = _list_all_user_cmd_cb}, 
 };
 
 static int thread_exit_val; 

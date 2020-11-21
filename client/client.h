@@ -3,7 +3,6 @@
 
 #include "common.h"
 
-
 struct client_sem {
     sem_t login_sem;    //登录成功信号量
 };

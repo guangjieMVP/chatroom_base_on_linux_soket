@@ -3,12 +3,13 @@
 
 
 enum {
-    OP_EXIT = 0,
-    OP_REGISTER = 1,
-    OP_LOGIN = 2,
-    OP_LOGOUT = 3,
-    OP_BROADCAST = 4,
-    OP_PRIVATE = 5,
+    OP_EXIT = 0x00,
+    OP_REGISTER = 0x01,
+    OP_LOGIN = 0x02,
+    OP_LOGOUT = 0x03,
+    OP_BROADCAST = 0x04,
+    OP_PRIVATE = 0x05,
+    OP_ALLUSER = 0x06,
 };
 
 
@@ -16,6 +17,7 @@ void menu_init()
 {
     printf("\n*************1、注册*******************");
     printf("\n*************2、登录*******************");
+    printf("\n*************6、显示所有用户************");
     printf("\n*************0、退出*******************");
     printf("\n");
     printf("请输入你的选择：\n");
@@ -27,6 +29,7 @@ void login_menu(void)
     printf("\n*************3、注销*******************");
     printf("\n*************4、公聊*******************");
     printf("\n*************5、私聊*******************");
+    printf("\n*************7、显示所有在线用户********");
     printf("\n");
     printf("请输入你的选择：\n");
 }
@@ -94,6 +97,11 @@ static void logout_failed_cb(void)
     printf("注销失败\n");
 }
 
+static void list_all_user_success_cb(void)
+{
+    printf("用户名：");
+}
+
 struct cmd cmd_reply_list[] = {
     {.cmd = REPLY_REGSITER_SUCCESS, .cmd_callback = regsiter_success_cb},
     {.cmd = REPLY_REGSITER_FAILD,   .cmd_callback = regsiter_failed_cb},
@@ -101,6 +109,7 @@ struct cmd cmd_reply_list[] = {
     {.cmd = REPLY_LOGIN_FAILD,      .cmd_callback = login_failed_cb},
     {.cmd = REPLY_LOGOUT_SUCCESS,   .cmd_callback = logout_success_cb},
     {.cmd = REPLY_LOGOUT_FAILD,     .cmd_callback = logout_failed_cb},
+    {.cmd = REPLY_ALL_USER_SUCCESS,  .cmd_callback = list_all_user_success_cb},
 };
 
 
@@ -133,10 +142,13 @@ static int op_private(void)
     return OP_PRIVATE;
 }
 
+
+
 struct option login_ops[] = {
     {.op = OP_LOGOUT, op_logout},
     {.op = OP_BROADCAST, op_broadcast},
     {.op = OP_PRIVATE, op_private},
+    
 };
 
 
@@ -182,21 +194,20 @@ static int op_login(void)
 {
     int ret;
     struct Protocol ptl;
-    struct Protocol reply_ptl;
 
     printf("请输入用户名：\n");
     scanf("%s", ptl.name);
     printf("请输入用户密码：\n");
     scanf("%s", ptl.msg);
 
-    ptl.cmd = LOGIN_CMD;
+    ptl.cmd = LOGIN_CMD; 
     ptl.cmd_reply = REPLY_NONE;
 
     extern int sock_client; 
-    int len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //给服务端发送注册信息
+    int len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //向服务端请求登录
     printf("登录\n");
 
-    client_sem_wait(&g_client_sem.login_sem);                                    //等待成功登录的信号量
+    client_sem_wait(&g_client_sem.login_sem);                         //等待成功登录的信号量 才能进入登录后的菜单
     while(1)
     {
         login_menu();
@@ -207,16 +218,24 @@ static int op_login(void)
             break;
         }
     }
-    // recv(sock_client, &reply_ptl, sizeof(struct protocol), 0);
-    // if (reply_ptl.cmd_reply != REPLY_REGSITER_SUCCESS)
-    // {
-    //     printf("注册失败\n");
-    // }
-    // else
-    // {
-    //     printf("注册成功\n");
-    // }
+
     return OP_LOGIN;
+}
+
+static int op_all_users(void)
+{   
+    printf("显示所有用户\n");
+
+    struct Protocol ptl;
+    int len;
+
+    ptl.cmd = LIST_ALL_USER_CMD;             
+    ptl.cmd_reply = REPLY_NONE;
+
+    extern int sock_client; 
+    len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //给服务端发送注销登录信息
+
+    return OP_ALLUSER;
 }
 
 /* 菜单选项 */
@@ -224,6 +243,7 @@ struct option main_menu_ops[] = {
     {.op = OP_EXIT,     op_exit},
     {.op = OP_REGISTER, op_register},
     {.op = OP_LOGIN,    op_login},
+    {.op = OP_ALLUSER,  op_all_users},
 };
 
 

@@ -21,6 +21,12 @@ void client_sem_wait(sem_t *s)
     sem_wait(s);
 }
 
+static void show_user_name(struct Protocol *p)
+{
+    if (p->cmd == LIST_ALL_USER_CMD)
+        printf("%s\n", p->name ? p->name : "NULL");
+}
+
 int global_socket;
 
 void *thread_recv(void *para)
@@ -42,10 +48,12 @@ void *thread_recv(void *para)
         }
         
         cmd_handle(cmd_reply_list, cmd_reply_list_size, reply_ptl.cmd_reply);  //处理应答的消息
+
+        show_user_name(&reply_ptl);
     }
 }
 
-int sock_client;
+volatile int sock_client;
 struct sockaddr_in sock_server_addr;
 
 int main(int argc, char **argv)
@@ -104,13 +112,7 @@ int main(int argc, char **argv)
 	{
         menu_init();
         op = input_menu_option();
-        menu_option_handle(main_menu_ops, main_menu_ops_size, op);
-//         send_len = send(sock_client, send_buf, strlen(send_buf), 0);
-//         if (send_len <= 0)
-//         {
-// //				close(sock_client);
-//             return -1;
-//         }
+        ret = menu_option_handle(main_menu_ops, main_menu_ops_size, op);
 	}
 
 
