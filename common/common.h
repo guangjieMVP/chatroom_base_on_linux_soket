@@ -25,6 +25,9 @@
 #include <stdlib.h>
 #include <errno.h> 
 #include <signal.h>
+#include <fcntl.h>           /* For O_* constants */
+#include <sys/stat.h>        /* For mode constants */
+#include <semaphore.h>
 
 #define SERVER_PORT      8888                        //端口号
 #define ARR_SIZE(a)      (sizeof(a)/sizeof(a[0]))
@@ -39,20 +42,28 @@ typedef struct userinformation userinfo_t;
 
 /* cmds */
 enum CmdCode {
-    BROADCAST_CHAT_CMD = 0x115200,
-    PRIVATE_CHAT_CMD   = 0x110600,
-    REGISTER_CMD       = 0x100502,
-    LOGIN_CMD          = 0x100503,
-    LOGOUT_CMD         = 0x100504,
-    LIST_ONLINE_USER   = 0x120406,
+    BROADCAST_CHAT_CMD     = 0x115200,
+    PRIVATE_CHAT_CMD       = 0x110600,
+    REGISTER_CMD           = 0x100502,
+    LOGIN_CMD              = 0x100503,
+    LOGOUT_CMD             = 0x100504,
+    LIST_ONLINE_USER_CMD   = 0x120406,
 };
 
 enum CmdReply {
-    REPLY_NONE             = 0x00,
-    REPLY_REGSITER_SUCCESS = 0x01,
-    REPLY_REGSITER_FAILD   = 0x02,
-    REPLY_LOGIN_SUCCESS    = 0x04,
-    REPLY_LOGIN_FAILD      = 0x05,
+    REPLY_NONE             = 0xA55A00,
+
+    REPLY_REGSITER_SUCCESS = 0xA55A01,
+    REPLY_REGSITER_FAILD   = 0xA55A02,
+
+    REPLY_LOGIN_SUCCESS    = 0xA55A03,
+    REPLY_LOGIN_FAILD      = 0xA55A04,
+
+    REPLY_LOGOUT_SUCCESS    = 0xA55A05,        //注销失败
+    REPLY_LOGOUT_FAILD      = 0xA55A06,        //注销成功
+ 
+    REPLY_PRIVATE_SUCCESS    = 0xA55A07,      //私聊成功
+    REPLY_PRIVATE_FAILD      = 0xA55A08,
 };
 
 /* C/S 通信协议 */

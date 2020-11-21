@@ -52,8 +52,15 @@ static void _login_cmd_cb(void)
     printf("登录命令\n");
     if (check_username_and_password_exist(ptl.name, ptl.msg))   //数据库中存在该用户
     {                                           
-                                                  //登录
-        ptl.cmd_reply = REPLY_LOGIN_SUCCESS;                                         
+        int ret = set_user_fd_field_by_name(socket_fd, ptl.name);         //设置登录标志，即将客户端的soket fd 插入数据库fd字段
+        if (!ret)        //登录失败
+        {
+            ptl.cmd_reply = REPLY_LOGIN_FAILD;
+        }
+        else
+        {
+            ptl.cmd_reply = REPLY_LOGIN_SUCCESS; 
+        }                                           
     }
     else
     {
@@ -64,7 +71,19 @@ static void _login_cmd_cb(void)
 
 static void _logout_cmd_cb(void)
 {
-    printf("注销命令\n");
+    int fd = -1;
+    int ret = set_user_fd_field_by_name(fd, ptl.name);         //设置数据库fd字段为-1,表示用户下线
+    if (!ret)        //登录失败
+    {
+        ptl.cmd_reply = REPLY_LOGOUT_FAILD;
+        printf("注销失败\n");
+    }
+    else
+    {
+        ptl.cmd_reply = REPLY_LOGOUT_SUCCESS; 
+        printf("注销成功\n");
+    }   
+    send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
 static void _listonline_user_cmd_cb(void)
@@ -73,12 +92,12 @@ static void _listonline_user_cmd_cb(void)
 }
 
 struct cmd cmdlist[] = {
-    {.cmd = BROADCAST_CHAT_CMD, .cmd_callback = _broadcast_chat_cmd_cb},
-    {.cmd = PRIVATE_CHAT_CMD,   .cmd_callback = _private_chat_cmd_cb},
-    {.cmd = REGISTER_CMD,       .cmd_callback = _register_cmd_cb},
-    {.cmd = LOGIN_CMD,          .cmd_callback = _login_cmd_cb},
-    {.cmd = LOGOUT_CMD,         .cmd_callback = _logout_cmd_cb},
-    {.cmd = LIST_ONLINE_USER,   .cmd_callback = _listonline_user_cmd_cb}, 
+    {.cmd = BROADCAST_CHAT_CMD,     .cmd_callback = _broadcast_chat_cmd_cb},
+    {.cmd = PRIVATE_CHAT_CMD,       .cmd_callback = _private_chat_cmd_cb},
+    {.cmd = REGISTER_CMD,           .cmd_callback = _register_cmd_cb},
+    {.cmd = LOGIN_CMD,              .cmd_callback = _login_cmd_cb},
+    {.cmd = LOGOUT_CMD,             .cmd_callback = _logout_cmd_cb},
+    {.cmd = LIST_ONLINE_USER_CMD,   .cmd_callback = _listonline_user_cmd_cb}, 
 };
 
 static int thread_exit_val; 
