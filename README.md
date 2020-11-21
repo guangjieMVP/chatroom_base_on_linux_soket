@@ -1,2 +1,2 @@
-a multi-thread chat room based on linux soket
+impletment a multi-thread chat room based on Linux socket from 0.
 
