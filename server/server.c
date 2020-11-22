@@ -4,9 +4,8 @@
 
 #define BACKLOG      10
 
-
 static  struct Protocol ptl = {0};
-static  int    socket_fd;
+static int global_fd;
 
 static void _broadcast_chat_cmd_cb(void)
 {
@@ -44,15 +43,17 @@ static void _register_cmd_cb(void)
         printf("注册失败\n");
     }
 
-    send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
+    // send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
 static void _login_cmd_cb(void)
 {
+    int ret;
+
     printf("登录命令\n");
     if (check_username_and_password_exist(ptl.name, ptl.msg))   //数据库中存在该用户
     {                                           
-        int ret = set_user_fd_field_by_name(socket_fd, ptl.name);         //设置登录标志，即将客户端的soket fd 插入数据库fd字段
+        int ret = set_user_fd_field_by_name(global_fd, ptl.name);         //设置登录标志，即将客户端的soket fd 插入数据库fd字段
         if (!ret)        //登录失败
         {
             ptl.cmd_reply = REPLY_LOGIN_FAILD;
@@ -66,7 +67,7 @@ static void _login_cmd_cb(void)
     {
         ptl.cmd_reply = REPLY_LOGIN_FAILD;
     }
-    send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
+    send(global_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
 static void _logout_cmd_cb(void)
@@ -83,40 +84,76 @@ static void _logout_cmd_cb(void)
         ptl.cmd_reply = REPLY_LOGOUT_SUCCESS; 
         printf("注销成功\n");
     }   
-    send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
+    send(global_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
-static void _listonline_user_cmd_cb(void)
+static int onlineuser_count = 0;
+static int _list_onlieuser_callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
 {
-    printf("列出在线用户\n");
-}
-
-// static volatile int user_cout = 0;
-static int _list_all_user_callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
-{
-    int i;
-    // char usernum[10];
+    int i;;
     struct Protocol reply_ptl;
-
-    // user_cout++;
+    onlineuser_count++;
+    // itoa(user_num, usernum, 10);
     reply_ptl.cmd = LIST_ALL_USER_CMD;
-    reply_ptl.cmd_reply = REPLY_ALL_USER_SUCCESS;
+    reply_ptl.cmd_reply = REPLY_ONLINE_USER_SUCCESS;
     // for (i = 0; i < (column_Count); i++)
     // {
     strcpy(reply_ptl.name, column_Val[1] ? column_Val[1] : "NULL");
-    send(socket_fd, &reply_ptl, sizeof(struct Protocol), 0);
+    // strcpy(reply_ptl.msg, usernum);
+    send(global_fd, &reply_ptl, sizeof(struct Protocol), 0);
 //        printf("  %s : %s  ", column_name[i], column_Val[i] ? column_Val[i] : "NULL");
     // }
     // printf("\n");
     return 0;
 } 
 
+static void _listonline_user_cmd_cb(void)
+{
+    struct Protocol reply_ptl;
+
+    onlineuser_count = 0;
+
+    printf("显示所有在线用户\n");
+    int ret = show_online_users(_list_onlieuser_callback);
+    if (!ret || !onlineuser_count)
+    {
+        reply_ptl.cmd = LIST_ONLINE_USER_CMD;
+        reply_ptl.cmd_reply = REPLY_ONLINE_USER_FAILD;
+    }
+}
+
+static int register_user_count = 0;
+static int _list_all_user_callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
+{
+    int i;
+    char usernum[10];
+    struct Protocol reply_ptl;
+
+    register_user_count++;
+    reply_ptl.cmd = LIST_ALL_USER_CMD;
+    reply_ptl.cmd_reply = REPLY_ALL_USER_SUCCESS;
+    // for (i = 0; i < (column_Count); i++)
+    // {
+    strcpy(reply_ptl.name, column_Val[1] ? column_Val[1] : "NULL");
+    // strcpy(reply_ptl.msg, usernum);
+    send(global_fd, &reply_ptl, sizeof(struct Protocol), 0);
+    return 0;
+} 
+
 static void _list_all_user_cmd_cb(void)
 {
     int ret;
-    ret = show_all_users(_list_all_user_callback);
+    struct Protocol reply_ptl;
 
-    printf("列出所有用户\n");
+    register_user_count = 0;
+
+    printf("显示所有注册用户\n");
+    ret = show_all_users(_list_all_user_callback);
+    if (!ret || !register_user_count)                //
+    {
+        reply_ptl.cmd = LIST_ALL_USER_CMD;
+        reply_ptl.cmd_reply = REPLY_ALL_USER_FAILD;
+    }
 }
 
 struct cmd cmdlist[] = {
@@ -131,23 +168,28 @@ struct cmd cmdlist[] = {
 
 static int thread_exit_val; 
 
+
+
 void *thread_recv(void *para)
 {
+    int    client_fd;
     int recv_len;
     // uint8_t recv_buf[1000];
-    socket_fd = *((int *)para);
+    client_fd = *((int *)para);
     free(para);
     
     while (1) 
     {
-        if ((recv_len = recv(socket_fd, &ptl, sizeof(struct Protocol), 0)) == -1)
+        if ((recv_len = recv(client_fd, &ptl, sizeof(struct Protocol), 0)) == -1)
         {
             perror("recv");
-            exit(1);
+            // exit(1);
+            thread_exit_val = 1;
+            pthread_exit(&thread_exit_val);
         }
         if (recv_len == -1)   //客户端出错
         {
-            close(socket_fd); 
+            close(client_fd); 
             // exit(1);
             thread_exit_val = 1;
             pthread_exit(&thread_exit_val);
@@ -155,19 +197,23 @@ void *thread_recv(void *para)
         } 
         if (recv_len == 0)    //客户端主动断开连接
         {
-            close(socket_fd);
+            close(client_fd);
             thread_exit_val = 1;
             pthread_exit(&thread_exit_val);
             // break;
             // exit(1); 
         }
 
+        global_fd = client_fd;
+
+        printf("client socket fd : %d\n", client_fd);
+        printf("global_fd fd : %d\n", global_fd);
         // info = (userinfo_t *)*((**ptl.msg).data);
         printf("cmd = %x\n", ptl.cmd);
         printf("name : %s\n", ptl.name);
         printf("password : %s\n", ptl.msg); 
 
-        cmd_handle(cmdlist, ARR_SIZE(cmdlist), ptl.cmd);
+       cmd_handle(cmdlist, ARR_SIZE(cmdlist), ptl.cmd);
         
 //        ptl.cmd_reply = REPLY_REGSITER_SUCCESS;
 //        send(socket, &ptl, sizeof(struct protocol), 0);

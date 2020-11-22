@@ -170,6 +170,21 @@ int set_user_fd_field_by_name(int fd, char *username)
 }
 
 
+int set_user_fd_field_by_fd(int fd, int socketfd)
+{
+    int ret;
+    char sql[512] = {0};
+
+    sprintf(sql, "update %s set fd=%d where fd=%d;", TABLE_NAME, fd, socketfd);
+
+    ret = sqlite3_exec(db, sql, NULL, 0, NULL);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "upate set fd", "upate set fd");
+#endif
+    return RETURN_VAL(ret);
+}
+
+
 int set_user_password_field_by_name(char *password, char *username)
 {
     int ret;
@@ -212,7 +227,8 @@ int set_password_field_by_fd(char *password, int fd)
     return RETURN_VAL(ret);
 }
 
-int show_online_user(void)
+
+int show_online_user(sqlite3_callback callback)
 {
     int ret;
 
@@ -239,6 +255,20 @@ static int _callback(void *NotUsed, int column_Count, char **column_Val, char **
     return 0;
 } 
 
+int show_online_users(sqlite3_callback callback)
+{
+    int ret;
+
+    char sql[512] = {0};
+    sprintf(sql, "select * from %s where fd > 0", TABLE_NAME);
+
+    ret = sqlite3_exec(db, sql, callback, 0, NULL);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "show all users", "show all users");
+#endif
+    return RETURN_VAL(ret);
+}
+
 
 int show_all_users(sqlite3_callback callback)
 {
@@ -252,6 +282,31 @@ int show_all_users(sqlite3_callback callback)
     print_sql_op_ret_log(ret, "show all users", "show all users");
 #endif
     return RETURN_VAL(ret);
+}
+
+static int user_num = 0;
+static int _user_num_callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
+{
+    int i;
+
+    user_num++;
+    return 0;
+} 
+
+//计算注册的用户的数量
+int get_register_user_num(void)
+{
+    int ret;
+    user_num = 0;
+
+    char sql[512] = {0};
+    sprintf(sql, "select * from %s", TABLE_NAME);
+
+    ret = sqlite3_exec(db, sql, _user_num_callback, 0, NULL);
+#if USE_SQL_LOG
+    print_sql_op_ret_log(ret, "show all users", "show all users");
+#endif
+    return user_num;
 }
 
 
@@ -321,7 +376,6 @@ int main(void)
         printf("ares already exists\n");
     }
     
-
     if (!check_is_username_exist("sola")) 
     {
         insert_usertbl_all_field(-1, "sola", "3455"); 
@@ -358,6 +412,9 @@ int main(void)
 
     ret = set_password_field_by_fd("11054748293", 520);
     printf("set_name_field : %d\n", ret);
+
+    ret = set_user_fd_field_by_fd(-10, 520);
+    printf("set_user_fd_field_by_fd : %d\n", ret);
 
     ret = show_all_users(_callback);
 

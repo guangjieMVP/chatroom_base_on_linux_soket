@@ -23,8 +23,10 @@ void client_sem_wait(sem_t *s)
 
 static void show_user_name(struct Protocol *p)
 {
-    if (p->cmd == LIST_ALL_USER_CMD)
+    if (p->cmd == LIST_ALL_USER_CMD || p->cmd == LIST_ONLINE_USER_CMD)
+    {
         printf("%s\n", p->name ? p->name : "NULL");
+    }
 }
 
 int global_socket;
@@ -34,7 +36,7 @@ void *thread_recv(void *para)
     struct Protocol reply_ptl;
     int recv_len;
     int socket = *(int *)para;
-    uint8_t recv_buf[1000];
+    // uint8_t recv_buf[1000];
     global_socket = socket;
     free(para);     //释放内存
 
@@ -113,6 +115,7 @@ int main(int argc, char **argv)
         menu_init();
         op = input_menu_option();
         ret = menu_option_handle(main_menu_ops, main_menu_ops_size, op);
+        sleep(1);
 	}
 
 

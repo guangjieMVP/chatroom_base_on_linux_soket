@@ -8,6 +8,7 @@ struct option {
     int (*op_callback)(void);
 };
 
+
 extern struct cmd cmd_reply_list[];
 extern int cmd_reply_list_size;
 

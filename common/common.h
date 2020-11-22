@@ -52,21 +52,25 @@ enum CmdCode {
 };
 
 enum CmdReply {
-    REPLY_NONE             = 0xA55A00,
+    REPLY_NONE                    = 0xA55A00,
 
-    REPLY_REGSITER_SUCCESS = 0xA55A01,
-    REPLY_REGSITER_FAILD   = 0xA55A02,
+    REPLY_REGSITER_SUCCESS         = 0xA55A01,
+    REPLY_REGSITER_FAILD           = 0xA55A02,
 
-    REPLY_LOGIN_SUCCESS    = 0xA55A03,
-    REPLY_LOGIN_FAILD      = 0xA55A04,
+    REPLY_LOGIN_SUCCESS            = 0xA55A03,
+    REPLY_LOGIN_FAILD              = 0xA55A04,
 
-    REPLY_LOGOUT_SUCCESS    = 0xA55A05,        //注销失败
-    REPLY_LOGOUT_FAILD      = 0xA55A06,        //注销成功
+    REPLY_LOGOUT_SUCCESS           = 0xA55A05,        //注销失败
+    REPLY_LOGOUT_FAILD             = 0xA55A06,        //注销成功
  
-    REPLY_PRIVATE_SUCCESS   = 0xA55A07,      //私聊成功
-    REPLY_PRIVATE_FAILD     = 0xA55A08,
+    REPLY_PRIVATE_SUCCESS          = 0xA55A07,      //私聊成功
+    REPLY_PRIVATE_FAILD            = 0xA55A08,
     
-    REPLY_ALL_USER_SUCCESS   = 0xA55A09,
+    REPLY_ALL_USER_SUCCESS         = 0xA55A09,
+    REPLY_ALL_USER_FAILD           = 0xA55A0a,
+
+    REPLY_ONLINE_USER_SUCCESS      = 0xA55A0b,
+    REPLY_ONLINE_USER_FAILD        = 0xA55A0c,
 };
 
 /* C/S 通信协议 */
