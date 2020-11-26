@@ -6,6 +6,14 @@
  * @github:      https://github.com/guangjieMVP
  * @brief: 
 */
+/*
+ * @file:        xxx.c
+ * @author:      guangjieMVP
+ * @version:     v1.00.00
+ * @date:        2020-xx-xx
+ * @github:      https://github.com/guangjieMVP
+ * @brief: 
+*/
 
 #ifndef _COMMON_H_
 #define _COMMON_H_
@@ -71,6 +79,9 @@ enum CmdReply {
 
     REPLY_ONLINE_USER_SUCCESS      = 0xA55A0b,
     REPLY_ONLINE_USER_FAILD        = 0xA55A0c,
+
+    REPLY_BROADCAST_SUCCESS      = 0xA55A0D,
+    REPLY_BROADCAST_FAILD        = 0xA55A0E,
 };
 
 /* C/S 通信协议 */
@@ -78,7 +89,7 @@ struct Protocol {
     int cmd;          //命令
     int cmd_reply;    //命令应答信息
     char name[32];   
-    char msg[1024];
+    char msg[4096];
 };
 
 /* 命令处理 */

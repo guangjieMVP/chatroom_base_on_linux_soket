@@ -228,19 +228,21 @@ int set_password_field_by_fd(char *password, int fd)
 }
 
 
-int show_online_user(sqlite3_callback callback)
+int get_online_user(sqlite3_callback callback, int fd)
 {
     int ret;
 
     char sql[512] = {0};
-    sprintf(sql, "select * from %s", TABLE_NAME);
+    sprintf(sql, "select * from %s where fd > 0 and fd != %d", TABLE_NAME, fd);
 
-    ret = sqlite3_exec(db, sql, NULL, 0, NULL);
+    ret = sqlite3_exec(db, sql, callback, 0, NULL);
 #if USE_SQL_LOG
-    print_sql_op_ret_log(ret, "show online user", "show online user");
+    print_sql_op_ret_log(ret, "get_online_user", "get_online_user");
 #endif
     return RETURN_VAL(ret);
 }
+
+
 
 
 static int _callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)

@@ -29,6 +29,14 @@ static void show_user_name(struct Protocol *p)
     }
 }
 
+static void show_user_msg(struct Protocol *p)
+{
+    if (p->cmd == BROADCAST_CHAT_CMD || p->cmd == PRIVATE_CHAT_CMD)
+    {
+        printf("%s\n", p->msg);
+    }
+}
+
 int global_socket;
 
 void *thread_recv(void *para)
@@ -50,7 +58,7 @@ void *thread_recv(void *para)
         }
         
         cmd_handle(cmd_reply_list, cmd_reply_list_size, reply_ptl.cmd_reply);  //处理应答的消息
-
+        show_user_msg(&reply_ptl);
         show_user_name(&reply_ptl);
     }
 }

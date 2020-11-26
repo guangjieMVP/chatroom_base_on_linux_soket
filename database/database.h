@@ -16,8 +16,9 @@ int set_name_field_by_fd(char *username, int fd);
 int set_password_field_by_fd(char *password, int fd);
 
 int show_all_users(sqlite3_callback callback);
-int show_online_users(sqlite3_callback callback);
+int show_online_users(sqlite3_callback callback);   
 
 int get_register_user_num(void);
+int get_online_user(sqlite3_callback callback, int fd);
 
 #endif

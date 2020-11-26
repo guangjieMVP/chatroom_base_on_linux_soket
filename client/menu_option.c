@@ -125,6 +125,17 @@ static void list_onlineuser_failed_cb(void)
     printf("获取在用户列表失败或无用户在线\n");
 }
 
+static void broadcast_success_cb(void)
+{
+
+}
+
+static void broadcast_failed_cb(void)
+{
+    printf("failed to broadcast\n");
+}
+
+
 struct cmd cmd_reply_list[] = {
     {.cmd = REPLY_REGSITER_SUCCESS, .cmd_callback = regsiter_success_cb},
     {.cmd = REPLY_REGSITER_FAILD,   .cmd_callback = regsiter_failed_cb},
@@ -136,12 +147,13 @@ struct cmd cmd_reply_list[] = {
     {.cmd = REPLY_ALL_USER_FAILD,   .cmd_callback = list_all_user_failed_cb},
     {.cmd = REPLY_ONLINE_USER_SUCCESS, .cmd_callback = list_onlineuser_success_cb},
     {.cmd = REPLY_ONLINE_USER_FAILD,   .cmd_callback = list_onlineuser_failed_cb},
+    {.cmd = REPLY_BROADCAST_SUCCESS, .cmd_callback = broadcast_success_cb},
+    {.cmd = REPLY_BROADCAST_FAILD,   .cmd_callback = broadcast_failed_cb},
 };
 
 
 static int op_logout(void)
 {
-    // struct Protocol ptl;
     int len;
 
     ptl.cmd = LOGOUT_CMD;             
@@ -156,8 +168,16 @@ static int op_logout(void)
 
 static int op_broadcast(void)
 {   
-    printf("公聊\n");
+    int len;
 
+    memset(ptl.msg, 0, sizeof(ptl.msg)); 
+    ptl.cmd = BROADCAST_CHAT_CMD;                                //广播消息       
+    ptl.cmd_reply = REPLY_NONE;
+    printf("请输入发送的消息：\n");
+    scanf("%s", ptl.msg);
+    printf("%s", ptl.msg);
+    extern int sock_client; 
+    len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //给服务端发送注销登录信息
     return OP_BROADCAST;
 }
 
@@ -170,14 +190,14 @@ static int op_private(void)
 
 static int op_showonlineuser(void)
 {   
-    // struct Protocol ptl;
+    struct Protocol tmp;
     int len;
-
-    ptl.cmd = LIST_ONLINE_USER_CMD;             
-    ptl.cmd_reply = REPLY_NONE;
+   
+    tmp.cmd = LIST_ONLINE_USER_CMD;             
+    tmp.cmd_reply = REPLY_NONE;
 
     extern int sock_client; 
-    len = send(sock_client, &ptl, sizeof(struct Protocol), 0);    //给服务端发送注销登录信息
+    len = send(sock_client, &tmp, sizeof(struct Protocol), 0);    //给服务端发送注销登录信息
     printf("显示在线用户\n");
 
     return OP_ALLONLIEUSER;

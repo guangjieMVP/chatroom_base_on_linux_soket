@@ -2,13 +2,37 @@
 #include "database.h"
 
 
-#define BACKLOG      10
+#define BACKLOG          10
 
 static  struct Protocol ptl = {0};
 static int global_fd;
 
+int tmpfd;
+static int _broadcast_chat_callback(void *NotUsed, int column_Count, char **column_Val, char **column_name)
+{
+    ptl.cmd = BROADCAST_CHAT_CMD;
+    ptl.cmd_reply = REPLY_BROADCAST_SUCCESS;
+
+    tmpfd = atoi(column_Val[0]);
+ 
+    printf("online user %d\n",  tmpfd);
+
+    send(tmpfd, &ptl, sizeof(struct Protocol), 0);
+
+    return 0;
+} 
+
 static void _broadcast_chat_cmd_cb(void)
 {
+    struct Protocol reply_ptl;
+    if (!get_online_user(_broadcast_chat_callback, global_fd))
+    {
+        reply_ptl.cmd = BROADCAST_CHAT_CMD;
+        reply_ptl.cmd_reply = REPLY_BROADCAST_FAILD;
+        send(tmpfd, &reply_ptl, sizeof(struct Protocol), 0);
+        return;
+    }
+
     printf("广播命令\n");
 }
 
@@ -43,7 +67,7 @@ static void _register_cmd_cb(void)
         printf("注册失败\n");
     }
 
-    // send(socket_fd, &ptl, sizeof(struct Protocol), 0); 
+    send(global_fd, &ptl, sizeof(struct Protocol), 0); 
 }
 
 static void _login_cmd_cb(void)
@@ -93,17 +117,14 @@ static int _list_onlieuser_callback(void *NotUsed, int column_Count, char **colu
     int i;;
     struct Protocol reply_ptl;
     onlineuser_count++;
-    // itoa(user_num, usernum, 10);
-    reply_ptl.cmd = LIST_ALL_USER_CMD;
+
+    reply_ptl.cmd = LIST_ONLINE_USER_CMD;
     reply_ptl.cmd_reply = REPLY_ONLINE_USER_SUCCESS;
-    // for (i = 0; i < (column_Count); i++)
-    // {
+
     strcpy(reply_ptl.name, column_Val[1] ? column_Val[1] : "NULL");
-    // strcpy(reply_ptl.msg, usernum);
+
     send(global_fd, &reply_ptl, sizeof(struct Protocol), 0);
-//        printf("  %s : %s  ", column_name[i], column_Val[i] ? column_Val[i] : "NULL");
-    // }
-    // printf("\n");
+
     return 0;
 } 
 
@@ -119,6 +140,8 @@ static void _listonline_user_cmd_cb(void)
     {
         reply_ptl.cmd = LIST_ONLINE_USER_CMD;
         reply_ptl.cmd_reply = REPLY_ONLINE_USER_FAILD;
+        send(global_fd, &reply_ptl, sizeof(struct Protocol), 0);
+        return;
     }
 }
 
@@ -211,9 +234,9 @@ void *thread_recv(void *para)
         // info = (userinfo_t *)*((**ptl.msg).data);
         printf("cmd = %x\n", ptl.cmd);
         printf("name : %s\n", ptl.name);
-        printf("password : %s\n", ptl.msg); 
+        printf("msg : %s\n", ptl.msg); 
 
-       cmd_handle(cmdlist, ARR_SIZE(cmdlist), ptl.cmd);
+        cmd_handle(cmdlist, ARR_SIZE(cmdlist), ptl.cmd);
         
 //        ptl.cmd_reply = REPLY_REGSITER_SUCCESS;
 //        send(socket, &ptl, sizeof(struct protocol), 0);
